@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIO_PULSE - Acceso Clínico</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background-color: #1e1e1e;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            text-align: center;
+            width: 320px;
+            border: 1px solid #2a2a2a;
+        }
+        h2 {
+            margin-top: 0;
+            color: #310598;
+            letter-spacing: 1px;
+        }
+        p {
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #333333;
+            background-color: #252525;
+            color: #ffffff;
+            box-sizing: border-box;
+            font-size: 16px;
+            text-align: center;
+        }
+        input[type="password"]:focus {
+            border-color: rgb(15, 51, 211)(235 0% 29%);
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3300b5;
+            border: none;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #1a09d9;
+        }
+        .error {
+            color: #ff4a4a;
+            background-color: rgba(255, 74, 74, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 74, 74, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>BIO_PULSE</h2>
+        <p>Sistema de Monitoreo ECG<br><strong>Acceso Restringido</strong></p>
+        
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST">
+            <input type="password" name="password" placeholder="Contraseña Clínica" required>
+            <button type="submit">Desbloquear Interfaz</button>
+        </form>
+    </div>
+</body>
+</html>

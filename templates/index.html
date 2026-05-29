@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <div class="header-left-group">
+            <img src="{{ url_for('static', filename='logo/logo.png') }}" alt="Logo Empresa" class="logo-empresa">
+            
+            <div class="title-status-group">
+                <h1>Visualizador ECG en Tiempo Real</h1>
+                <div id="status-container">
+                    <span id="status-indicator" class="disconnected"></span>
+                    <span id="status-text">Desconectado</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <section class="card chart-section">
+            <h2>Señal Electrocardiográfica</h2>
+            <div class="canvas-container">
+                <canvas id="ecgChart"></canvas>
+            </div>
+            
+            <div class="history-section" style="margin-top: 35px;">
+                <h3 style="color: #0035c7; border-bottom: 1px solid #334155; padding-bottom: 8px;">Paciente en Monitoreo Actual</h3>
+                <div class="table-container" style="overflow-x: auto; margin-top: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #0f172a; color: #0035c7;">
+                                <th style="padding: 12px;">ID Paciente</th>
+                                <th style="padding: 12px;">Nombre Completo</th>
+                                <th style="padding: 12px;">Edad</th>
+                                <th style="padding: 12px;">Sexo</th>
+                                <th style="padding: 12px;">Peso (kg)</th>
+                                <th style="padding: 12px;">Est. (m)</th>
+                                <th style="padding: 12px;">Fecha / Hora Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paciente in pacientes %}
+                            <tr style="border-bottom: 1px solid #334155;">
+                                <td style="padding: 12px; font-weight: bold;">{{ paciente[0] }}</td>
+                                <td style="padding: 12px;">{{ paciente[1] }}</td>
+                                <td style="padding: 12px;">{{ paciente[2] }}</td>
+                                <td style="padding: 12px;">{{ paciente[3] }}</td>
+                                <td style="padding: 12px;">{{ paciente[4] }}</td>
+                                <td style="padding: 12px;">{{ paciente[5] }}</td>
+                                <td style="padding: 12px; color: #94a3b8; font-size: 0.9rem;">{{ paciente[6] }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">No hay un paciente asignado al monitor actualmente.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="card control-section" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <h2>Gestión Clínica</h2>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 15px;">Use el siguiente módulo para administrar los reportes del paciente:</p>
+                
+                <button id="btn-abrir-registro" class="btn-primary" style="width: 100%; background-color: #3605e6; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 0; margin-bottom: 12px;">
+                    <span> </span> Registrar Nuevo Paciente
+                </button>
+
+                <button id="btn-descargar-reporte" class="btn-primary" style="width: 100%; background-color: #3b82f6; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 0;">
+                    <span> </span> Descargar Reporte Clínico 
+                </button>
+            </div>
+
+            <hr style="border: 1px solid #1e293b; margin: 25px 0;">
+
+            <div>
+                <h2>Simulación ECG</h2>
+                <div class="metrics">
+                    <div class="metric-box">
+                        <h3>Frecuencia Cardíaca</h3>
+                        <p><span id="bpm-value">--</span> BPM</p>
+                    </div>
+                </div>
+                <div class="buttons" style="margin-top: 15px;">
+                    <button id="btn-conectar" class="btn-primary">Iniciar Simulación</button>
+                    <button id="btn-detener" class="btn-danger" disabled>Detener</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-registro" class="modal-overlay">
+        <div class="modal-content">
+            <span id="btn-cerrar-registro" class="close-modal">&times;</span>
+            
+            <h2 style="margin-bottom: 20px; color: white;">Registro Clínico del Paciente</h2>
+            
+            <form action="{{ url_for('registrar_paciente') }}" method="POST" class="patient-form">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: #94a3b8;">ID / Número de Paciente:</label>
+                    <input type="text" name="id_paciente" placeholder="Ej: PAC-100" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: #94a3b8;">Nombre Completo:</label>
+                    <input type="text" name="nombre" placeholder="Nombre del paciente" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; color: #94a3b8;">Edad:</label>
+                        <input type="number" name="edad" placeholder="Años" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; color: #94a3b8;">Sexo:</label>
+                        <select name="sexo" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; color: #94a3b8;">Peso (kg):</label>
+                        <input type="number" step="0.1" name="peso" placeholder="Ej: 68.5" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; color: #94a3b8;">Estatura (m):</label>
+                        <input type="number" step="0.01" name="estatura" placeholder="Ej: 1.72" required style="width: 100%; padding: 10px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 6px;">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" style="width: 100%; background-color: #126ccd; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">Guardar e Inyectar a la Nube</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- CORRECCIÓN DE CONEXIÓN SEGURA ---
+         // Busca este bloque al final de tu index.html y reemplázalo por esto:
+        const socket = io("https://bio-pulse.onrender.com", {
+        transports: ['polling'], 
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 500
+        });
+        const bpmDisplay = document.getElementById('bpm-value');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        const btnConectar = document.getElementById('btn-conectar');
+        const btnDetener = document.getElementById('btn-detener');
+        const btnDescargar = document.getElementById('btn-descargar-reporte');
+        const btnAbrir = document.getElementById('btn-abrir-registro');
+        const btnCerrar = document.getElementById('btn-cerrar-registro');
+        const modal = document.getElementById('modal-registro');
+
+        const ctx = document.getElementById('ecgChart').getContext('2d');
+
+       
+        const ecgChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+        // Creamos un array de 800 ceros (esto es el tamaño del "Zoom" o ventana)
+        labels: Array(800).fill(''),
+        datasets: [{
+            label: 'Señal ECG',
+            data: Array(800).fill(0),
+            borderColor: '#000000', // Color negro clínico
+            borderWidth: 2,
+            pointRadius: 0,        // Sin puntos individuales
+            tension: 0,            // Líneas rectas para picos definidos
+            fill: false
+        }]
+         },
+         options: {
+         animation: false,          // ¡Obligatorio para tiempo real!
+         responsive: true,
+         maintainAspectRatio: false,
+         scales: {
+            x: { display: false }, // Ocultamos el eje X
+            y: { min: -1000, max: 1000 } // Ajusta estos valores si la señal se sale de rango
+         }
+    }
+         });
+
+        // Lógica de Socket
+        socket.on('connect', () => {
+            statusIndicator.className = 'connected';
+            statusText.innerText = 'Conectado';
+        });
+
+        // Lógica de Socket optimizada para recibir paquetes
+        socket.on('datos_ecg', (paquete) => {
+            // 'paquete' ahora es una LISTA: [{voltaje: X, bpm: Y}, {voltaje: X, bpm: Y}, ...]
+            
+            paquete.forEach((muestra) => {
+                // 1. Agregamos el voltaje de cada muestra del paquete a la gráfica
+                ecgChart.data.datasets[0].data.push(muestra.voltaje);
+                
+                // 2. Mantenemos la gráfica rodante (quitamos el más viejo)
+                ecgChart.data.datasets[0].data.shift();
+                
+                // 3. Actualizamos BPM si viene en la muestra
+                if (muestra.bpm > 0) {
+                    bpmDisplay.innerText = Math.round(muestra.bpm);
+                }
+            });
+
+            // 4. IMPORTANTE: Solo actualizamos el dibujo una vez por paquete
+            // Esto es lo que elimina los parpadeos y la lentitud
+            ecgChart.update('none'); 
+        });
+
+        socket.on('disconnect', () => {
+            statusIndicator.className = 'disconnected';
+            statusText.innerText = 'Desconectado';
+        });
+
+        // Lógica de Botones
+        btnConectar.onclick = () => {
+            socket.connect();
+            setTimeout(() => socket.emit('start_simulation'), 500);
+            btnConectar.disabled = true;
+            btnDetener.disabled = false;
+        };
+
+        btnDetener.onclick = () => {
+            socket.disconnect();
+            btnConectar.disabled = false;
+            btnDetener.disabled = true;
+        };
+
+        btnAbrir.onclick = () => modal.style.display = 'flex';
+        btnCerrar.onclick = () => modal.style.display = 'none';
+
+        btnDescargar.onclick = () => {
+            const element = document.querySelector('.dashboard');
+            html2pdf().from(element).save('Reporte_Clinico.pdf');
+        };
+    </script>
+</body>
+</html>

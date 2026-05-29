@@ -1,0 +1,235 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #121824;
+    color: #e2e8f0;
+    padding: 20px;
+}
+
+/* ==========================================================================
+   ENCABEZADO: Ajustado para alinear Logo y Título juntos a la IZQUIERDA
+   ========================================================================== */
+header {
+    border-bottom: 2px solid #1e293b;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+/* Contenedor principal que agrupa el logo y los textos en una sola fila */
+.header-left-group {
+    display: flex;
+    align-items: center;      /* Centra verticalmente el logo con respecto a las letras */
+    gap: 20px;                /* Espaciado de separación entre el logo y el título */
+}
+
+/* Contenedor del título y el estado (alineados uno arriba del otro) */
+.title-status-group {
+    display: flex;
+    flex-direction: column;   /* Apila el título principal arriba y el estado abajo */
+}
+
+#status-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;          /* Pequeño espacio debajo de las letras principales */
+}
+
+#status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.disconnected { background-color: #ef4444; }
+.connected { background-color: #0035c7; animation: pulse 1.5s infinite; }
+
+@keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+
+/* Configuración estética del Logo a la Izquierda */
+.logo-empresa {
+    height: 75px;             /* Altura para el escudo de BIO PULSE */
+    width: auto;              /* Mantiene la proporción original */
+    object-fit: contain;
+    filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.4)); /* Realce visual */
+}
+
+/* ==========================================================================
+   DASHBOARD Y TARJETAS (Estructura original)
+   ========================================================================== */
+.dashboard {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .dashboard { grid-template-columns: 1fr; }
+}
+
+.card {
+    background-color: #1e293b;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-container {
+    position: relative;
+    width: 100%;
+    height: 350px;
+}
+
+.metric-box {
+    background-color: #0f172a;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.metric-box p {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0035c7;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+button:active {
+    transform: scale(0.98); /* Pequeño efecto visual al presionar */
+}
+
+.btn-primary { background-color: #3b82f6; color: white; }
+.btn-primary:hover { background-color: #2563eb; }
+.btn-danger { background-color: #dc2626; color: white; }
+.btn-danger:hover { background-color: #b91c1c; }
+button:disabled { background-color: #475569; cursor: not-allowed; }
+
+/* ==========================================================================
+   Formulario Clínico y Tabla de Pacientes
+   ========================================================================== */
+.patient-form {
+    margin-top: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.input-group input, 
+.input-group select {
+    padding: 10px 12px;
+    background-color: #0f172a; /* Fondo interno oscuro */
+    border: 1px solid #475569; /* Borde sutil */
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #0035c7; 
+    outline: none;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: #334155;
+}
+
+table tbody tr {
+    transition: background-color 0.2s;
+}
+
+table tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.04); /* Destello sutil al pasar el mouse */
+}
+
+/* ==========================================================================
+   CONTROL DE VENTANA EMERGENTE (MODAL)
+   ========================================================================== */
+/* Fondo oscuro que cubre toda la pantalla */
+.modal-overlay {
+    display: none; /* Se activa como 'flex' mediante JavaScript */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.85); /* Tono oscuro traslúcido */
+    z-index: 3000; /* Asegura estar por encima de gráficos */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Caja contenedora del formulario flotante */
+.modal-content {
+    background-color: #1e293b;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    position: relative;
+    border: 1px solid #334155;
+}
+
+/* Botón "X" para cerrar el formulario emergente */
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    color: #64748b;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #ef4444; /* Rojo al pasar el mouse */
+}
+
+/* Botón de guardar dentro del modal */
+.btn-submit {
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #0035c7 !important;
+}
