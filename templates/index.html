@@ -46,7 +46,7 @@
                                 <th style="padding: 12px;">Sexo</th>
                                 <th style="padding: 12px;">Peso (kg)</th>
                                 <th style="padding: 12px;">Est. (m)</th>
-                                <th style="padding: 12px;">Fecha / Hora Registro</th>
+                                <th style="padding: 12px;">Fecha </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,7 +58,7 @@
                                 <td style="padding: 12px;">{{ paciente[3] }}</td>
                                 <td style="padding: 12px;">{{ paciente[4] }}</td>
                                 <td style="padding: 12px;">{{ paciente[5] }}</td>
-                                <td style="padding: 12px; color: #94a3b8; font-size: 0.9rem;">{{ paciente[6] }}</td>
+                                <td style="padding: 12px; color: #94a3b8; font-size: 0.9rem;">{{ paciente[6].split(' ')[0] }}</td>
                             </tr>
                             {% else %}
                             <tr>
@@ -183,7 +183,7 @@
             label: 'Señal ECG',
             data: Array(800).fill(0),
             borderColor: '#0035c7', // Color negro clínico
-            borderWidth: 3,
+            borderWidth: 2,
             pointRadius: 0,        // Sin puntos individuales
             tension: 0,            // Líneas rectas para picos definidos
             fill: false
