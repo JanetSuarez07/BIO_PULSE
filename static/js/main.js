@@ -108,74 +108,58 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. EXPORTACIÓN PDF (Versión Conectada a la BD Neon)
-    if (btnDescargar) {
-        btnDescargar.addEventListener('click', async () => {
-        // 1. Obtener el ID del paciente activo (Asegúrate de que este ID sea correcto)
-        // Puedes obtenerlo de un input oculto o de la primera celda de tu tabla
+    // 6. EXPORTACIÓN PDF (Versión Optimizada)
+if (btnDescargar) {
+    btnDescargar.addEventListener('click', async () => {
         const idPacActual = document.querySelector(".table-container tbody tr td")?.innerText;
 
         if (!idPacActual) {
-            alert("No hay paciente registrado para generar el reporte.");
+            alert("No hay paciente registrado.");
             return;
         }
 
         try {
-            // 2. PETICIÓN DIRECTA A TU API DE PYTHON (la que creamos en app.py)
             const response = await fetch(`/obtener_datos_paciente/${idPacActual}`);
             const data = await response.json();
 
-            if (data.error) {
-                alert("Error al obtener datos: " + data.error);
-                return;
-            }
-
-            // 3. Preparar los datos visuales
-            const bpmActual = document.getElementById('bpm-value').innerText;
-            const duracion = typeof calcularDuracion === 'function' ? calcularDuracion(horaInicio, horaFin) : "N/A";
-            const imgData = document.getElementById('ecgChart').toDataURL("image/png", 1.0);
-            const fechaMexico = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
-
-            // 4. Crear el contenedor limpio
+            // Creamos un contenedor temporal fuera de pantalla
             const reporte = document.createElement('div');
-            reporte.style.cssText = "padding: 40px; font-family: Arial, sans-serif; background: #fff; color: #000;";
+            reporte.style.cssText = "padding: 40px; font-family: Arial, sans-serif; background: #ffffff; color: #000; width: 800px;";
 
+            // IMPORTANTE: Aquí incluimos el logo manualmente con su ruta directa
+            // Asegúrate de que la ruta sea correcta o usa la URL pública de tu imagen
             reporte.innerHTML = `
-                <h1 style="text-align: center;">Reporte Clínico BIO_PULSE</h1>
-                <p><strong>Fecha de emisión:</strong> ${fechaMexico}</p>
-                <h2 style="border-bottom: 1px solid #ccc;">Datos del Paciente (BD)</h2>
-                <table style="width: 100%; margin-bottom: 20px;">
-                    <tr><td><strong>ID:</strong> ${data.id}</td><td><strong>Nombre:</strong> ${data.nombre}</td></tr>
-                    <tr><td><strong>Edad/Sexo:</strong> ${data.edad} / ${data.sexo}</td><td><strong>Peso/Est:</strong> ${data.peso}kg / ${data.estatura}m</td></tr>
-                </table>
-                <h2 style="border-bottom: 1px solid #ccc;">Resumen Monitoreo</h2>
-                <p><strong>Inicio:</strong> ${horaInicio} | <strong>Fin:</strong> ${horaFin} | <strong>Duración:</strong> ${duracion}</p>
-                <p><strong>BPM Final:</strong> ${bpmActual}</p>
-                <h2 style="border-bottom: 1px solid #ccc;">Trazado ECG</h2>
-                <img src="${imgData}" style="width: 100%; border: 1px solid #000;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="/static/logo/logo.png" style="width: 150px;">
+                    <h1>Reporte Clínico BIO_PULSE</h1>
+                </div>
+                <div style="border: 1px solid #000; padding: 15px;">
+                    <p><strong>Paciente:</strong> ${data.nombre} (ID: ${data.id})</p>
+                    <p><strong>Edad/Sexo:</strong> ${data.edad} / ${data.sexo}</p>
+                    <p><strong>BPM Final:</strong> ${document.getElementById('bpm-value').innerText}</p>
+                </div>
+                <h2 style="border-bottom: 1px solid #ccc; margin-top: 30px;">Trazado ECG</h2>
+                <img src="${document.getElementById('ecgChart').toDataURL('image/png')}" style="width: 100%;">
             `;
 
-            // 5. Generar el PDF
-            reporte.style.position = "absolute";
-            reporte.style.left = "-9999px";
             document.body.appendChild(reporte);
 
+            // Configuramos html2pdf para manejar mejor el renderizado
             html2pdf().set({
-                margin: 15,
+                margin: 10,
                 filename: `Reporte_${data.id}.pdf`,
-                html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(reporte).save().then(() => {
-                document.body.removeChild(reporte);
+                document.body.removeChild(reporte); // Limpiamos el DOM
             });
 
-        // ... (Todo el código anterior igual hasta el try/catch del btnDescargar)
-
         } catch (err) {
-            console.error("Error al conectar con la BD:", err);
-            alert("No se pudo conectar con el servidor para obtener los datos.");
+            alert("Error al generar reporte.");
         }
-    }); // <--- ESTE CIERRE ES EL DEL addEventListener
-} // <--- ESTE CIERRE ES EL DEL if (btnDescargar)
+    });
+}
 
 // 7. LÓGICA DE APERTURA Y CIERRE DE MODAL
 // Ahora esto queda fuera del if del botón de descarga, pero dentro del DOMContentLoaded
