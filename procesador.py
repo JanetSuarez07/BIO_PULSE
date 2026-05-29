@@ -10,7 +10,7 @@ import time
 # CONFIGURACIÓN GENERAL
 # =========================================================
 FS = 250
-BUFFER_SIZE = 2000
+BUFFER_SIZE = 1500
 OFFSET = 2048
 paquete_datos = []
 TAMANO_PAQUETE = 20
