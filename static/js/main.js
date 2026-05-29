@@ -108,59 +108,62 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. EXPORTACIÓN PDF (Versión Conectada a la BD Neon)
-    // 6. EXPORTACIÓN PDF (Versión Optimizada)
-if (btnDescargar) {
+    if (btnDescargar) {
     btnDescargar.addEventListener('click', async () => {
         const idPacActual = document.querySelector(".table-container tbody tr td")?.innerText;
-
-        if (!idPacActual) {
-            alert("No hay paciente registrado.");
-            return;
-        }
+        if (!idPacActual) return alert("Paciente no detectado.");
 
         try {
+            // 1. Obtener datos del servidor
             const response = await fetch(`/obtener_datos_paciente/${idPacActual}`);
             const data = await response.json();
-
-            // Creamos un contenedor temporal fuera de pantalla
-            const reporte = document.createElement('div');
-            reporte.style.cssText = "padding: 40px; font-family: Arial, sans-serif; background: #ffffff; color: #000; width: 800px;";
-
-            // IMPORTANTE: Aquí incluimos el logo manualmente con su ruta directa
-            // Asegúrate de que la ruta sea correcta o usa la URL pública de tu imagen
-            reporte.innerHTML = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="/static/logo/logo.png" style="width: 150px;">
+            
+            // 2. Crear un contenedor limpio
+            const divReporte = document.createElement('div');
+            divReporte.style.cssText = "padding: 50px; font-family: sans-serif; background: white; width: 700px; color: #000;";
+            
+            // 3. Estructura del PDF sin el trazado ECG
+            divReporte.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="/static/logo/logo.png" style="width: 150px; height: auto;">
                     <h1>Reporte Clínico BIO_PULSE</h1>
                 </div>
-                <div style="border: 1px solid #000; padding: 15px;">
-                    <p><strong>Paciente:</strong> ${data.nombre} (ID: ${data.id})</p>
-                    <p><strong>Edad/Sexo:</strong> ${data.edad} / ${data.sexo}</p>
-                    <p><strong>BPM Final:</strong> ${document.getElementById('bpm-value').innerText}</p>
+                <div style="border-top: 2px solid #0035c7; padding-top: 20px;">
+                    <h2 style="color: #0035c7;">Información del Paciente</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>ID:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.id}</td></tr>
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Nombre:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.nombre}</td></tr>
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Edad:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.edad} años</td></tr>
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Sexo:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.sexo}</td></tr>
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Peso:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.peso} kg</td></tr>
+                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Estatura:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.estatura} m</td></tr>
+                    </table>
                 </div>
-                <h2 style="border-bottom: 1px solid #ccc; margin-top: 30px;">Trazado ECG</h2>
-                <img src="${document.getElementById('ecgChart').toDataURL('image/png')}" style="width: 100%;">
+                <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+                    <p>Reporte generado automáticamente por sistema BIO_PULSE</p>
+                </div>
             `;
 
-            document.body.appendChild(reporte);
+            document.body.appendChild(divReporte);
 
-            // Configuramos html2pdf para manejar mejor el renderizado
-            html2pdf().set({
-                margin: 10,
+            // 4. Generar PDF
+            const opt = {
+                margin: 15,
                 filename: `Reporte_${data.id}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(reporte).save().then(() => {
-                document.body.removeChild(reporte); // Limpiamos el DOM
-            });
+            };
+
+            await html2pdf().set(opt).from(divReporte).save();
+            document.body.removeChild(divReporte);
 
         } catch (err) {
-            alert("Error al generar reporte.");
+            console.error(err);
+            alert("Error al generar el reporte.");
         }
     });
 }
-
 // 7. LÓGICA DE APERTURA Y CIERRE DE MODAL
 // Ahora esto queda fuera del if del botón de descarga, pero dentro del DOMContentLoaded
 if (btnAbrirRegistro && modalRegistro) {
