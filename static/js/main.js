@@ -107,46 +107,52 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. EXPORTACIÓN PDF (Versión Conectada a la BD Neon)
-    if (btnDescargar) {
+    // 6. EXPORTACIÓN PDF (Versión Estable y Completa)
+if (btnDescargar) {
     btnDescargar.addEventListener('click', async () => {
+        // Obtenemos el ID del paciente desde la tabla
         const idPacActual = document.querySelector(".table-container tbody tr td")?.innerText;
-        if (!idPacActual) return alert("Paciente no detectado.");
+        
+        if (!idPacActual) {
+            alert("No se detectó un paciente válido en la tabla.");
+            return;
+        }
 
         try {
             // 1. Obtener datos del servidor
             const response = await fetch(`/obtener_datos_paciente/${idPacActual}`);
             const data = await response.json();
             
-            // 2. Crear un contenedor limpio
+            // 2. Crear un contenedor temporal para el PDF
             const divReporte = document.createElement('div');
-            divReporte.style.cssText = "padding: 50px; font-family: sans-serif; background: white; width: 700px; color: #000;";
+            divReporte.style.cssText = "padding: 50px; font-family: Arial, sans-serif; background: white; width: 700px; color: #000;";
             
-            // 3. Estructura del PDF sin el trazado ECG
+            // 3. Estructura del reporte (Tabla limpia, sin canvas/gráficos inestables)
             divReporte.innerHTML = `
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <img src="/static/logo/logo.png" style="width: 150px; height: auto;">
-                    <h1>Reporte Clínico BIO_PULSE</h1>
+                    <h1 style="color: #0035c7; margin-bottom: 5px;">BIO_PULSE</h1>
+                    <p style="font-size: 14px; color: #555;">Reporte Clínico de Paciente</p>
                 </div>
                 <div style="border-top: 2px solid #0035c7; padding-top: 20px;">
-                    <h2 style="color: #0035c7;">Información del Paciente</h2>
+                    <h2 style="color: #0035c7; font-size: 18px;">Información del Paciente</h2>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>ID:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.id}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Nombre:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.nombre}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Edad:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.edad} años</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Sexo:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.sexo}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Peso:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.peso} kg</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Estatura:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${data.estatura} m</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>ID:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.id}</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>Nombre:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.nombre}</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>Edad:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.edad} años</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>Sexo:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.sexo}</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>Peso:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.peso} kg</td></tr>
+                        <tr><td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>Estatura:</strong></td><td style="padding: 12px; border-bottom: 1px solid #eee;">${data.estatura} m</td></tr>
                     </table>
                 </div>
-                <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+                <div style="margin-top: 60px; text-align: center; color: #999; font-size: 11px;">
                     <p>Reporte generado automáticamente por sistema BIO_PULSE</p>
                 </div>
             `;
 
+            // Agregamos al documento para poder renderizarlo
             document.body.appendChild(divReporte);
 
-            // 4. Generar PDF
+            // 4. Configuración y Generación del PDF
             const opt = {
                 margin: 15,
                 filename: `Reporte_${data.id}.pdf`,
@@ -155,12 +161,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
+            // Ejecutamos la descarga
             await html2pdf().set(opt).from(divReporte).save();
+            
+            // Limpiamos el DOM eliminando el contenedor temporal
             document.body.removeChild(divReporte);
 
         } catch (err) {
             console.error(err);
-            alert("Error al generar el reporte.");
+            alert("Hubo un error al generar el PDF. Asegúrate de que el servidor esté respondiendo.");
         }
     });
 }
